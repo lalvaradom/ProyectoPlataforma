@@ -17,12 +17,6 @@ logging.basicConfig(level=logging.INFO,
 @task
 def process():
     dataset = data.Dataset()
-    count  = 0
-    start = time.time()
     for model,key,img in dataset.get_images(BUCKET_NAME):
         print model,key,img.shape,detector.detect(img)
-        count +=1
-        if count == 20:
-            print round(time.time() - start,1)
-            break
 
