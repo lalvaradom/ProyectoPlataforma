@@ -3,7 +3,7 @@ from collections import defaultdict
 import gzip
 
 
-class Dataset:
+class Dataset(object):
     def __init__(self):
         self.models = defaultdict(list)
         for line in gzip.GzipFile(os.path.join(os.path.dirname(__file__),"data.txt.gz")):
@@ -14,9 +14,9 @@ class Dataset:
             except:
                 print line
 
-    def print_sorted(self):
+    def sorted(self):
         for k,v in sorted([ (len(v),k) for k,v in self.models.iteritems()],reverse=True):
-            print k,v
+            yield k,v
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ class VGGFace(object):
         self.batch_size = 1
         self.vars = []
         self.layers = []
-        self.names = [line.strip() for line in file(os.path.join(os.path.dirname("__file__"), 'names.txt'))]
+        self.names = [line.strip() for line in file(os.path.join(os.path.dirname(os.path.realpath("__file__")), 'vggface/names.txt'))]
         # (1): nn.SpatialConvolutionMM(3 -> 64, 3x3, 1,1, 1,1)
         self.layers.append(('conv','1',3,3,3,64))
         # (3): nn.SpatialConvolutionMM(64 -> 64, 3x3, 1,1, 1,1)
@@ -118,7 +118,7 @@ class VGGFace(object):
             elif layer[0] == 'softmax':
                 self.add_(name, tf.nn.softmax(self.get_output()),layer)
 
-    def load(self, ses, input_img, path=os.path.join(os.path.dirname("__file__"), 'network.h5')):
+    def load(self, ses, input_img, path = os.path.join(os.path.dirname(os.path.realpath("__file__")), 'vggface/network.h5')):
         self.params = h5py.File(path,'r')
         self.vars.append(('input',input_img,['input',None]))
         self.setup()
