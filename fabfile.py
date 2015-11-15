@@ -59,6 +59,14 @@ def notebook():
     local("ipython-2.7 notebook")
 
 
+@task
+def setup():
+    """
+        install Tensorflow
+    """
+    run("pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl")
+    run("pip install --upgrade fabric")
+    run("pip install --upgrade boto3")
 
 @task
 def freeze():
