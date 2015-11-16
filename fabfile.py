@@ -35,14 +35,12 @@ def process():
         bb = align.getLargestFaceBoundingBox(img)
         aligned  = align.alignImg("affine", 224, img, bb)
         if not aligned is None:
-            print model,key,img.shape,bb,aligned.shape
+            # print model,key,img.shape,bb,aligned.shape
             cv2.imwrite("test/face_{}".format(key.replace('/','_')),aligned)
             # cv2.imshow("test",aligned)
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
             # break
-        else:
-            print "No face found"
 
 @task
 def notebook_server():
@@ -90,6 +88,12 @@ def setup():
     run("/home/ubuntu/torch/install/bin/luarocks install image")
     run("/home/ubuntu/torch/install/bin/luarocks install torch")
     upload()
+
+@task
+def process_server():
+    with cd("workspace"):
+        run("/home/ubuntu/anaconda/bin/fab process > logs/process.log")
+
 
 @task
 def freeze():
