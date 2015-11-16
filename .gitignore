@@ -65,9 +65,7 @@ target/
 *.h5
 connect.sh
 
-work*
 plots
-data
 *reps
 
 models/facenet/*.t7

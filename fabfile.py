@@ -1,12 +1,16 @@
-import os,sys,logging
+import os,sys,logging,time
 from fabric.api import env,local,run,sudo,put,cd,lcd,puts,task,get
 from fabric.operations import local as lrun, run
 from fabric.state import env
 from settings import BUCKET_NAME
 import data
-import detector
-import time
 import cv2
+fileDir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(fileDir, "./openface/"))
+import openface
+import openface.helper
+import dlib
+from openface.alignment import NaiveDlib  # Depends on dlib.
 from settings import USER,private_key,HOST
 env.user = USER
 env.key_filename = private_key
@@ -22,10 +26,23 @@ logging.basicConfig(level=logging.INFO,
 
 @task
 def process():
+    dlibModelDir = os.path.join(fileDir, "./openface/models/dlib")
+    dlibFaceMean = os.path.join(dlibModelDir, "mean.csv")
+    dlibFacePredictor = os.path.join(dlibModelDir,"shape_predictor_68_face_landmarks.dat")
+    align = NaiveDlib(dlibFaceMean,dlibFacePredictor)
     dataset = data.Dataset()
     for model,key,img in dataset.get_images(BUCKET_NAME):
-        print model,key,img.shape,detector.detect(img)
-
+        bb = align.getLargestFaceBoundingBox(img)
+        aligned  = align.alignImg("affine", 224, img, bb)
+        if not aligned is None:
+            print model,key,img.shape,bb,aligned.shape
+            cv2.imwrite("test/face_{}".format(key.replace('/','_')),aligned)
+            # cv2.imshow("test",aligned)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+            # break
+        else:
+            print "No face found"
 
 @task
 def notebook_server():
