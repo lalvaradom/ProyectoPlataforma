@@ -64,9 +64,15 @@ def setup():
     """
         install Tensorflow
     """
-    run("pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl")
-    run("pip install --upgrade fabric")
-    run("pip install --upgrade boto3")
+    run("/home/ubuntu/anaconda/bin/pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl")
+    run("/home/ubuntu/anaconda/bin/pip install --upgrade fabric")
+    run("/home/ubuntu/anaconda/bin/pip install --upgrade boto3")
+    run("/home/ubuntu/anaconda/bin/pip install --upgrade dlib")
+    run("/home/ubuntu/torch/install/bin/luarocks install dpnn")
+    run("/home/ubuntu/torch/install/bin/luarocks install nn")
+    run("/home/ubuntu/torch/install/bin/luarocks install image")
+    run("/home/ubuntu/torch/install/bin/luarocks install torch")
+    upload()
 
 @task
 def freeze():
@@ -85,7 +91,7 @@ def connect():
 
 @task
 def backup():
-    get("workspace/*","workspace")
+    get("/tmp/*.png",".")
 
 @task
 def upload():
