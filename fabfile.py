@@ -7,10 +7,6 @@ import data
 import cv2
 fileDir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(fileDir, "./openface/"))
-import openface
-import openface.helper
-import dlib
-from openface.alignment import NaiveDlib  # Depends on dlib.
 from settings import USER,private_key,HOST
 env.user = USER
 env.key_filename = private_key
@@ -23,24 +19,55 @@ logging.basicConfig(level=logging.INFO,
                     filename='logs/fab.log',
                     filemode='a')
 
+@task
+def process_server(process_count=2):
+    """
+    :param process_count:
+    :return:
+    """
+    with cd("workspace"):
+        try:
+            run("rm -rf fabfile.py")
+            run("rm -rf output")
+        except:
+            pass
+        put("fabfile.py","fabfile.py")
+        run("mkdir output")
+        for code in range(process_count):
+            run("screen -S face_process_{} -d -m /home/ubuntu/anaconda/bin/fab process:{},{};sleep 5  ".format(code,code,process_count))
+
 
 @task
-def process():
+def process(code,div):
+    import openface
+    import openface.helper
+    import dlib
+    from openface.alignment import NaiveDlib  # Depends on dlib.
+    code = int(code)
+    div = int(div)
     dlibModelDir = os.path.join(fileDir, "./openface/models/dlib")
     dlibFaceMean = os.path.join(dlibModelDir, "mean.csv")
     dlibFacePredictor = os.path.join(dlibModelDir,"shape_predictor_68_face_landmarks.dat")
     align = NaiveDlib(dlibFaceMean,dlibFacePredictor)
     dataset = data.Dataset()
+    last = time.time()
+    count = 0
     for model,key,img in dataset.get_images(BUCKET_NAME):
-        bb = align.getLargestFaceBoundingBox(img)
-        aligned  = align.alignImg("affine", 224, img, bb)
-        if not aligned is None:
-            # print model,key,img.shape,bb,aligned.shape
-            cv2.imwrite("test/face_{}".format(key.replace('/','_')),aligned)
-            # cv2.imshow("test",aligned)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
-            # break
+        if hash(key) % div == code:
+            bb = align.getLargestFaceBoundingBox(img)
+            aligned  = align.alignImg("affine", 224, img, bb)
+            # print time.time() - last
+            last = time.time()
+            count += 1
+            if not aligned is None:
+                # print model,key,img.shape,bb,aligned.shape
+                cv2.imwrite("output/face_{}".format(key.replace('/','_').replace('models','')),aligned)
+                # cv2.imshow("test",aligned)
+                # cv2.waitKey(0)
+                # cv2.destroyAllWindows()
+                # break
+        if count % 20 == 0 and code == 0:
+            local('aws s3 mv output/ s3://aub3data/output/ --recursive --storage-class "REDUCED_REDUNDANCY"  --region "us-east-1"')
 
 @task
 def notebook_server():
@@ -78,8 +105,9 @@ def notebook():
 def setup():
     """
         install Tensorflow
+        /Users/aub3/.ssh/cs5356
     """
-    run("/home/ubuntu/anaconda/bin/pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.5.0-cp27-none-linux_x86_64.whl")
+    run("/home/ubuntu/anaconda/bin/pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.6.0-cp27-none-linux_x86_64.whl")
     run("/home/ubuntu/anaconda/bin/pip install --upgrade fabric")
     run("/home/ubuntu/anaconda/bin/pip install --upgrade boto3")
     run("/home/ubuntu/anaconda/bin/pip install --upgrade dlib")
@@ -87,13 +115,14 @@ def setup():
     run("/home/ubuntu/torch/install/bin/luarocks install nn")
     run("/home/ubuntu/torch/install/bin/luarocks install image")
     run("/home/ubuntu/torch/install/bin/luarocks install torch")
+    sudo("apt-get update")
+    sudo("apt-get install -y awscli")
     upload()
 
-@task
-def process_server():
-    with cd("workspace"):
-        run("/home/ubuntu/anaconda/bin/fab process > logs/process.log")
 
+@task
+def download():
+    get("/home/ubuntu/crfasrnn/","crfasrnn")
 
 @task
 def freeze():
@@ -129,3 +158,8 @@ def upload():
         if not d.startswith('.'):
             put("{}".format(d),"workspace/")
 
+
+"""
+mogrify -resize '500x500' *.jpg
+
+"""

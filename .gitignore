@@ -65,6 +65,7 @@ target/
 *.h5
 connect.sh
 
+/crfasrnn
 plots
 *reps
 
