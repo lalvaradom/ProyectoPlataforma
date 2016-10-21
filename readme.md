@@ -7,3 +7,4 @@ https://www.dropbox.com/s/7g4nhq4a467jzgv/network.h5?dl=0
 
 Please note that use of VGG Face recognition models must adhere to requirements specified here: http://www.robots.ox.ac.uk/~vgg/software/vgg_face/
 
+I recommend using https://github.com/davidsandberg/facenet which implements Facenet in TensorFlow. 
